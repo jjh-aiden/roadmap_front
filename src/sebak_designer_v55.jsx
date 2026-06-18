@@ -2063,14 +2063,14 @@ function parseGenealogiesFromOverview(overviewText) {
   const genealogies = [];
 
   // "## 심화 계보" 섹션 찾기
-  const genealogySection = overviewText.match(/## 심화 계보[\s\S]*?(?=\n## |\n===== |$)/);
+  const genealogySection = overviewText.match(/(?:^|\n)#{0,3}\s*심화 계보[\s\S]*?(?=\n#{0,3}\s*[가-힣]|\n===== |$)/);
   if (!genealogySection) return [];
 
   const text = genealogySection[0];
 
   // 각 계보 추출 (1. **계보명** — 요약 형식)
-  const genealogyRegex = /\d+\.\s*\*\*([^*]+)\*\*\s*—\s*([^\n]+)/g;
-  const activityRegex = /-\s*\(([^)]+)\)\s*([^—\n]+?)(?:\s*—\s*([^\n]+))?(?=\n|$)/g;
+  const genealogyRegex = /\d+\.\s*(?:\*\*)?([^*\n—]+?)(?:\*\*)?\s*—\s*([^\n]+)/g;
+  const activityRegex = /(?:^|\n)\s*-?\s*\(([^)]+)\)\s*([^—\n]+?)(?:\s*—\s*([^\n]+))?(?=\n|$)/g;
 
   let match;
   const matches = [];
