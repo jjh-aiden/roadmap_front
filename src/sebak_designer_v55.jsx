@@ -1988,6 +1988,74 @@ JSON 스키마 (이 형식 정확히 지킬 것):
 
 
 // ============================================================
+// 🔁 과목 간 탐구 주제 중복 판정 (소유권 확정 → 나머지 교체)
+// ============================================================
+
+const SYSTEM_TOPIC_ARBITRATION = `당신은 학생부 컨설팅의 탐구 주제 중복 판정 전문가입니다.
+이번 학기 여러 과목에서 생성된 탐구 주제 목록이 주어집니다.
+서로 중복되거나 지나치게 유사한 주제를 찾아, 각 중복 묶음마다 **가장 적합한 과목 하나**를 소유자로 정하고
+나머지는 교체 대상으로 지정하세요.
+
+⚠️ 중복 판정 기준 (아래 중 하나라도 해당하면 중복):
+1. 탐구 대상·소재가 실질적으로 같음 (표현만 다른 경우 포함)
+2. 핵심 개념·키워드가 대부분 겹침
+3. 결론·시사점이 사실상 같은 자리에 도달함
+4. 학생이 면접에서 "두 활동이 어떻게 다른가"를 설명하기 어려울 정도로 유사
+
+⚠️ 중복이 아닌 경우 (묶지 말 것):
+- 같은 학과 분야라는 이유만으로 묶기 금지 (예: 둘 다 건축 관련 = 그 자체로는 중복 아님)
+- 탐구 대상이 다르면 접근 방법이 비슷해도 중복 아님
+- 과목이 달라 단원·성취기준이 다르면, 소재가 유사해도 신중히 판단
+
+⚠️ 소유권(keep) 결정 기준 — 이 순서로 판단:
+1. 그 주제를 다루기에 학문적으로 가장 자연스러운 과목 (단원·성취기준 정합성)
+2. 그 과목에서만 할 수 있는 탐구인가 (다른 과목으로 옮기면 어색해지는가)
+3. 학생의 기존 활동기록과 연결이 더 강한 쪽
+
+⚠️ 보수적으로 판단:
+- 확실한 중복만 보고할 것. 애매하면 묶지 말 것.
+- 한 과목 안의 두 주제(①②)끼리 중복인 경우도 판정 대상에 포함.
+- subject 값은 반드시 입력 목록에 있는 과목명을 그대로 사용.
+
+출력 형식 (JSON만, 다른 설명 금지):
+{
+  "clusters": [
+    {
+      "theme": "겹치는 지점을 한 줄로",
+      "keep": { "subject": "과목명", "index": 1 },
+      "replace": [
+        { "subject": "과목명", "index": 2, "reason": "왜 이쪽을 교체하는지 한 줄" }
+      ]
+    }
+  ]
+}
+
+중복이 없으면 {"clusters": []} 를 출력하세요.`;
+
+// 과목 결과 텍스트에서 탐구 주제 추출
+function parseTopicsFromSubject(subjectText, subjectName) {
+  if (!subjectText) return [];
+
+  const topics = [];
+
+  // 탐구 주제 ① / ② 찾기 (한 패턴씩)
+  const topicRegex = /\*\*\[탐구 주제 ([①②])([^\]]*)\]\*\*[\s\S]*?\*\*주제명\*\*:\s*([^\n]+)/g;
+
+  let match;
+  while ((match = topicRegex.exec(subjectText)) !== null) {
+    const indexChar = match[1];
+    const index = indexChar === "①" ? 1 : 2;
+    const tag = (match[2] || "").trim();  // 예: "— 진로 연계"
+    const title = match[3].trim();
+
+    topics.push({ subject: subjectName, index, tag, title });
+  }
+
+  return topics;
+}
+
+
+// ============================================================
 // 메인 컴포넌트
 // ============================================================
 export default function SebakDesigner() {
@@ -3163,7 +3231,7 @@ const fileInputRef = useRef(null);
 
       const subjectMap = {};
 
-      const generateForSubject = async (subject) => {
+      const generateForSubject = async (subject, extraInstruction = "") => {
         const isCreativeAct = curriculumData && curriculumData[subject] && curriculumData[subject].교과군 === "창의적 체험활동";
         let curriculumBlock = "";
         if (isCreativeAct) {
@@ -3200,7 +3268,7 @@ const fileInputRef = useRef(null);
 
         const result = await callClaude(
           isFreshman ? SYSTEM_SUBJECT_FRESHMAN : SYSTEM_SUBJECT,
-          `${studentInfoText}${majorContext}${facultyMappingSection}${identitySection}${difficultySection}\n[총론]\n${overview}\n\n[학생부]\n${pdfIsImageType ? "(학생부는 이미지 PDF로 첨부됨 — 총론에 이미 학생부 분석이 반영되어 있으니 총론 내용을 활용. 추가로 이미지를 직접 참고할 수 있음)" : (parsedText.trim() ? parsedText : "(학생부 미업로드 — 1학년 초반)")}${schoolContextSection}${freshmanInterestSection}\n\n[작성 대상 과목]\n${subject}${curriculumBlock}`,
+          `${studentInfoText}${majorContext}${facultyMappingSection}${identitySection}${difficultySection}\n[총론]\n${overview}\n\n[학생부]\n${pdfIsImageType ? "(학생부는 이미지 PDF로 첨부됨 — 총론에 이미 학생부 분석이 반영되어 있으니 총론 내용을 활용. 추가로 이미지를 직접 참고할 수 있음)" : (parsedText.trim() ? parsedText : "(학생부 미업로드 — 1학년 초반)")}${schoolContextSection}${freshmanInterestSection}\n\n[작성 대상 과목]\n${subject}${curriculumBlock}${extraInstruction}`,
           4500,
           "claude-sonnet-4-6",
           allImages,
@@ -3250,6 +3318,85 @@ const fileInputRef = useRef(null);
       }
 
       setGenerationLog(l => [...l, `✓ [${elapsed()}] 모든 교과 완료`]);
+
+      // 🔁 과목 간 주제 중복 판정 → 소유권 확정 → 나머지 과목 주제 교체
+      try {
+        setGenerationLog(l => [...l, `③ [${elapsed()}] 과목 간 주제 중복 검사...`]);
+
+        const allTopics = [];
+        for (const subj of selectedSubjects) {
+          allTopics.push(...parseTopicsFromSubject(subjectMap[subj], subj));
+        }
+
+        if (allTopics.length < 2) {
+          setGenerationLog(l => [...l, `  · 비교할 주제가 부족해 건너뜀 (${allTopics.length}개)`]);
+        } else {
+          const topicsText = allTopics
+            .map(t => `[${t.subject}] 주제 ${t.index}${t.tag ? " " + t.tag : ""}: ${t.title}`)
+            .join("\n");
+
+          const arbRes = await callClaude(
+            SYSTEM_TOPIC_ARBITRATION,
+            `[목표 학과]\n${displayMajor}\n\n[총론]\n${overview}\n\n[이번 학기 탐구 주제 목록]\n${topicsText}`,
+            2048,
+            MODEL_FAST
+          );
+          const clusters = JSON.parse(stripJsonFence(arbRes)).clusters || [];
+
+          // 교체 계획 수립 — keep은 확정, replace만 교체 대상
+          const planBySubject = {};
+          const confirmedTitles = [];
+          for (const c of clusters) {
+            if (!c || !c.keep || !Array.isArray(c.replace) || c.replace.length === 0) continue;
+            const keptTopic = allTopics.find(t => t.subject === c.keep.subject && t.index === c.keep.index);
+            if (keptTopic) confirmedTitles.push(`[${keptTopic.subject}] ${keptTopic.title}`);
+            for (const r of c.replace) {
+              if (!r || !subjectMap[r.subject] || (r.index !== 1 && r.index !== 2)) continue;
+              if (!planBySubject[r.subject]) planBySubject[r.subject] = { indices: new Set(), reasons: [] };
+              planBySubject[r.subject].indices.add(r.index);
+              planBySubject[r.subject].reasons.push(`주제 ${r.index}: ${r.reason || c.theme || "다른 과목과 중복"}`);
+            }
+          }
+
+          const targets = Object.keys(planBySubject);
+          if (targets.length === 0) {
+            setGenerationLog(l => [...l, `  ✓ [${elapsed()}] 중복 없음 — 교체 불필요`]);
+          } else {
+            setGenerationLog(l => [...l, `  → 중복 ${clusters.length}건 확인, ${targets.length}개 과목 주제 교체 시작`]);
+
+            // 순차 처리 — 교체된 주제도 다음 교체의 회피 목록에 누적
+            for (const subj of targets) {
+              const plan = planBySubject[subj];
+              const charOf = i => (i === 1 ? "①" : "②");
+              const replaceIdxs = Array.from(plan.indices).sort();
+              const replaceChars = replaceIdxs.map(charOf).join("·");
+              const keepIdxs = [1, 2].filter(i => !plan.indices.has(i));
+              const keepPart = keepIdxs.length
+                ? `- 탐구 주제 ${keepIdxs.map(charOf).join("·")}: [기존 결과]의 해당 주제를 거의 그대로 유지하세요 (주제명·핵심 내용 보존, 성격 헤더도 동일).\n`
+                : "";
+
+              const dedupInstruction = `\n[주제 중복 교체 요청]\n이번 학기 다른 과목과 주제가 겹쳐 일부를 교체합니다.\n${plan.reasons.map(r => "- " + r).join("\n")}\n\n⚠️ 이번 재작성 규칙 (반드시 준수):\n${keepPart}- 탐구 주제 ${replaceChars}: 아래 [확정된 주제]와 겹치지 않는 새 주제로 교체하세요. 소재·핵심 개념·결론이 모두 달라야 합니다.\n- 교체 주제는 가능하면 다른 단원의 성취기준을 활용해 차별화하세요.\n- 출력 형식(설계 방향 + 탐구 주제 ①② 구조)과 성격 매트릭스 규칙은 기존과 동일하게 유지.\n\n[확정된 주제 — 겹치면 안 됨]\n${confirmedTitles.length ? confirmedTitles.join("\n") : "(없음)"}\n\n[기존 결과]\n${subjectMap[subj]}\n`;
+
+              try {
+                const replaced = await generateForSubject(subj, dedupInstruction);
+                subjectMap[subj] = replaced;
+                setSubjectResults({ ...subjectMap });
+                // 새로 만들어진 주제도 이후 교체의 회피 대상에 추가
+                for (const t of parseTopicsFromSubject(replaced, subj)) {
+                  confirmedTitles.push(`[${t.subject}] ${t.title}`);
+                }
+                setGenerationLog(l => [...l, `    ✓ [${elapsed()}] ${subj} 주제 ${replaceChars} 교체 완료`]);
+              } catch (e) {
+                setGenerationLog(l => [...l, `    ⚠ ${subj} 교체 실패 — 기존 주제 유지 (${e.message})`]);
+              }
+            }
+            setGenerationLog(l => [...l, `✓ [${elapsed()}] 중복 정리 완료`]);
+          }
+        }
+      } catch (e) {
+        console.error("주제 중복 검사 실패:", e);
+        setGenerationLog(l => [...l, `  ⚠ 중복 검사 건너뜀 (${e.message}) — 생성된 주제는 그대로 유지`]);
+      }
 
     } catch (e) {
       console.error("Generation error:", e);
