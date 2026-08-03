@@ -931,30 +931,6 @@ const SYSTEM_PARSE = `당신은 학생부 파싱 전문가입니다.
   }
 }`;
 
-const SYSTEM_PROFILE = `당신은 대한민국 최상위권 대학 학생부종합전형 전문 입시 컨설턴트입니다.
-파싱된 학생부와 학생의 진로·목표대학 정보가 주어집니다.
-학생의 탐구 계보·강점·공백을 분석해 아래 마크다운 형식으로 출력하세요.
-
-## 진로 정렬도
-[high / medium / low 중 선택] — [한 문장 근거]
-
-## 심화 계보 (1~3개)
-1. **[제목]**: [흐름 요약. 학생부 인용 근거]
-2. ...
-
-## 강점 키워드
-- 키워드 1
-- 키워드 2
-
-## 공백 영역 (다음 학기에 채워야 할 것)
-1. **[영역]**: [왜 비어 있는지]
-2. ...
-
-원칙:
-- 모든 분석은 학생부에 실제로 등장한 활동을 근거로 인용
-- 추측·일반론 금지
-- 마크다운만 출력, 코드 블록 백틱 사용 금지`;
-
 // ============================================================
 // v50: 진로 진로 구체화 시스템 프롬프트 (5개 — 대화형)
 // ============================================================
@@ -1102,7 +1078,7 @@ JSON 외 설명·따옴표 없이 객체만 출력하세요.`;
 const SYSTEM_OVERVIEW = `당신은 대한민국 최상위권 대학 학생부종합전형 전문 입시 컨설턴트입니다.
 학생부·목표 학과 정보·이번 학기 이수 과목이 주어집니다.
 다음 두 가지 문서를 한 번에 작성하세요:
-1. 학생 프로파일 (진로 정렬도 + 심화 계보 중심 분석)
+1. 학생 프로파일 (심화 계보 중심 분석)
 2. 설계 방향 총론 (다음 학기 세특 설계 가이드)
 
 ⚠️ 평가 프레임 (학종 표준 3대 역량 — 내부 사고용):
@@ -1177,14 +1153,16 @@ const SYSTEM_OVERVIEW = `당신은 대한민국 최상위권 대학 학생부종
 
 ⚠️ 핵심 계보 추출 원칙 (학생 프로파일의 핵심):
 모든 활동을 나열하지 말 것. 다음 기준으로 **핵심 계보에 해당하는 활동만** 추출:
-- 학년 간 연결되는 탐구 흐름이 있는 활동
+- 주제·개념·탐구 방법이 서로 이어지는 탐구 흐름이 있는 활동
 - 학생의 진로·학과와 연결되는 학업역량·진로역량 근거 활동
 - 의미 있는 탐구·심화 활동 (단발성 행사·봉사 시간 채우기·일반 참여는 제외)
 
 ⚠️ 강제 인용 룰 (모든 활동에 출처 명시):
-- 형식: "(학년 영역) 활동명 — 핵심 내용을 1~2문장으로 충실히 서술"
-- 예: "(1학년 진로활동) 자기부상 기술 — 상전도 흡인식·초전도 반발식 작동 원리 체계적 이해, 트랜스 래피드·인천공항 사례 분석을 통해 친환경 가능성 입증"
-- 예: "(2학년 독서 세특) 나비에-스토크스 방정식과 CFD 탐구 — 유체의 질량·운동량·에너지 보존 방정식 분석, 항공우주 양력 예측에 적용"
+- 형식: "(활동기록) 활동명 — 핵심 내용을 1~2문장으로 충실히 서술"
+- 예: "(활동기록) 자기부상 기술 — 상전도 흡인식·초전도 반발식 작동 원리 체계적 이해, 트랜스 래피드·인천공항 사례 분석을 통해 친환경 가능성 입증"
+- 예: "(활동기록) 나비에-스토크스 방정식과 CFD 탐구 — 유체의 질량·운동량·에너지 보존 방정식 분석, 항공우주 양력 예측에 적용"
+- ⚠️ 입력 데이터에는 학년·영역(자율활동/동아리활동/진로활동/세특) 정보가 없습니다.
+  학년이나 영역을 추측해 표기하지 말 것. 출처는 반드시 "(활동기록)" 하나로 통일.
 - 출처 없이 활동만 언급 금지
 - 각 활동을 단순 키워드가 아니라 1~2문장으로 충실히 서술
 
@@ -1210,21 +1188,24 @@ const SYSTEM_OVERVIEW = `당신은 대한민국 최상위권 대학 학생부종
 
 # 1. 학생 프로파일
 
-**진로 정렬도**: [HIGH / MEDIUM / LOW 중 하나]
+**활동 개요**
 
 [5~8문장으로 충실히 서술. 다음 요소를 포함할 것:
-1. 학년별 진로희망과 활동 방향의 일치 정도 (1학년 → 2학년 → 3학년 흐름)
-2. 진로 전환 흔적이 있다면 명시 (예: "1학년 X → 2학년 Y로 전환")
-3. 정렬도 평가 근거 (학생부 인용 1~2개 포함)
-4. 현재 시점에서 부족한 정렬 영역 (선택)]
+1. 활동기록 전반에서 반복적으로 드러나는 관심 영역과 그 분포
+2. 목표 학과·진로와 연결되는 활동군, 그리고 연결이 약한 활동군의 구분
+3. 판단 근거 (활동기록 인용 1~2개 포함)
+4. 현재 시점에서 비어 있는 영역 (선택)]
 
-**진로 흐름**: 1학년 [진로희망] → 2학년 [진로희망] → 3학년 [진로희망] (전환 있으면 명시)
+⚠️ 입력 데이터에는 학년·학기 정보가 없습니다.
+- 진로 정렬도(HIGH/MEDIUM/LOW) 판정 금지 — 학년별 흐름을 알 수 없으므로 평가 불가.
+- "1학년 → 2학년 → 3학년" 형태의 진로 흐름 서술 금지.
+- 특정 활동에 학년을 추측해 부여하지 말 것.
 
 ---
 
 ## 심화 계보 (3~5개)
 
-학생부 전체를 검토한 후, 학년 간 연결되는 의미 있는 탐구 흐름을 **3~5개** 추출. 각 계보당 학생부 출처 인용 **3개 이상** 필수.
+활동기록 전체를 검토한 후, 주제·개념·탐구 방법 면에서 서로 이어지는 의미 있는 탐구 흐름을 **3~5개** 추출. 각 계보당 출처 인용 **3개 이상** 필수.
 
 각 활동은 단순 키워드가 아니라 **3~5문장으로 충실히 서술** (학생부 실제 내용 인용 + 활동의 핵심을 구체적으로).
 
@@ -1244,7 +1225,7 @@ const SYSTEM_OVERVIEW = `당신은 대한민국 최상위권 대학 학생부종
 
 ⚠️ 계보 추출 원칙:
 - 의미 있는 탐구·심화 흐름만 (단발성 행사·일반 봉사 제외)
-- 학년 간 연결성이 있거나, 진로·학업역량 근거가 강한 활동 위주
+- 주제·개념·탐구 방법 면에서 서로 이어지거나, 진로·학업역량 근거가 강한 활동 위주
 - 한 계보당 활동 3~5개 권장 (너무 많으면 핵심 흐릿)
 - 만약 어떤 활동이 어떤 계보와도 연결 안 되지만 의미 있는 경우, 별도 계보로 표시하거나 "독립 활동: ..." 으로 명시
 - ⚠️ 각 활동에 인용 출처와 3~5문장 충실한 서술 (단순 키워드 X)
@@ -1301,13 +1282,10 @@ const SYSTEM_OVERVIEW = `당신은 대한민국 최상위권 대학 학생부종
 ==========================================
 
 원칙:
-- 진로 정렬도 평가 기준:
-  · HIGH = 모든 학년에서 일관된 진로 흐름. 학년 간 단절 없음.
-  · MEDIUM = 일부 학년만 정렬되거나, 진로 전환 후 새 진로로 재정렬됨.
-  · LOW = 학년 간 진로 불일치·산발적.
-- 진로 전환 시 명시 ("1학년 X → 2학년 Y") + HIGH 부여 금지.
-- 진로 추출: 학생부 진로희망 우선 → 학과명 보조 → "진로 미정 학생" 표현 절대 금지.
-- 모든 근거는 학생부 실제 내용 인용 (가짜 인용 금지).
+- ⚠️ 진로 정렬도(HIGH/MEDIUM/LOW) 판정 금지. 입력 데이터에 학년 정보가 없어 평가 불가.
+- ⚠️ 학년·학기·영역을 추측해 서술하거나 표기하지 말 것.
+- 진로 추출: 학과명 기준 → 활동기록에서 반복되는 관심 영역 보조 → "진로 미정 학생" 표현 절대 금지.
+- 모든 근거는 활동기록 실제 내용 인용 (가짜 인용 금지).
 - "채울 교과"는 반드시 입력된 이번 학기 과목 안에서만 지정.
 - 활동의 깊이를 과장하지 말 것.
 - 약점 진단 전 학생부 전체 재확인.
@@ -1357,7 +1335,7 @@ const SYSTEM_OVERVIEW = `당신은 대한민국 최상위권 대학 학생부종
 const SYSTEM_OVERVIEW_FRESHMAN = `당신은 대한민국 최상위권 대학 학생부종합전형 전문 입시 컨설턴트입니다.
 **학생은 1학년**이며, 학생부·학과 정보·이번 학기 이수 과목이 주어집니다.
 다음 두 가지 문서를 한 번에 작성하세요:
-1. 학생 프로파일 (1학년 시점에서 본 정렬도 + 관심사 단서)
+1. 학생 프로파일 (1학년 시점 관심사 단서)
 2. 설계 방향 총론 (이번 학기 세특 설계 가이드, 계열 단위 권장)
 
 ⚠️ 1학년 컨설팅 핵심 원칙 (절대 위반 금지):
@@ -2010,185 +1988,6 @@ JSON 스키마 (이 형식 정확히 지킬 것):
 
 
 // ============================================================
-// 📊 계보 시각화 — 사후 매핑 (총론 심화 계보 × 과목 탐구 주제)
-// ============================================================
-
-const SYSTEM_GENEALOGY_MAPPING = `당신은 학생부 컨설팅의 분류 전문가입니다.
-주어진 [심화 계보 목록]과 [탐구 주제 목록]을 매핑하는 작업을 수행합니다.
-
-⚠️ 매핑 원칙:
-1. 각 탐구 주제를 가장 잘 발전시키는 계보 하나만 선택합니다.
-2. 어느 계보와도 명확히 연결되지 않으면 "독립"으로 분류합니다.
-3. 매핑은 다음 기준으로 판단:
-   - 탐구 주제의 핵심 키워드가 계보의 핵심 주제와 일치하는가?
-   - 탐구 주제가 계보의 학년 간 발전 방향을 자연스럽게 이어가는가?
-   - 탐구 주제의 결론이 계보의 발전 방향을 강화하는가?
-
-⚠️ 보수적으로 판단:
-- 우연한 키워드 일치 정도로는 매핑 금지
-- 계보의 본질적 흐름을 발전시키는 주제만 매핑
-- 애매하면 "독립"으로 분류
-
-출력 형식 (JSON만, 다른 설명 금지):
-{
-  "mappings": [
-    {
-      "subject": "과목명",
-      "topicIndex": 1 또는 2,
-      "topicTitle": "탐구 주제명",
-      "genealogy": "계보명 또는 독립",
-      "reason": "왜 이 계보로 매핑했는지 한 줄"
-    }
-  ]
-}`;
-
-// 빈 계보를 채울 과목을 AI가 자동 선택
-const SYSTEM_GENEALOGY_SUBJECT_PICK = `당신은 학생부 컨설팅 분류 전문가입니다.
-주어진 [목표 계보]를 가장 자연스럽게 발전시킬 수 있는 [이번 학기 과목] 하나를 선택합니다.
-
-판단 기준:
-- 과목의 학문 영역이 계보의 핵심 주제·흐름과 연결되는가?
-- 그 과목에서 계보를 잇는 탐구 주제를 무리 없이 설계할 수 있는가?
-- 억지 연결은 금지. 단, 완벽히 맞는 과목이 없어도 가장 가까운 하나는 반드시 고른다.
-
-⚠️ subject 값은 반드시 [이번 학기 과목] 목록에 있는 과목명을 그대로 사용.
-
-출력 형식 (JSON만, 사족 금지):
-{ "subject": "과목명", "reason": "한 줄 이유" }`;
-
-// 총론 텍스트에서 심화 계보 구조 추출
-function parseGenealogiesFromOverview(overviewText) {
-  if (!overviewText) return [];
-
-  const genealogies = [];
-
-  // "## 심화 계보" 섹션 찾기
-  const genealogySection = overviewText.match(/(?:^|\n)#{0,3}\s*심화 계보[\s\S]*?(?=\n#{0,3}\s*[가-힣]|\n===== |$)/);
-  if (!genealogySection) return [];
-
-  const text = genealogySection[0];
-
-  // 각 계보 추출 (1. **계보명** — 요약 형식)
-  const genealogyRegex = /\d+\.\s*(?:\*\*)?([^*\n—]+?)(?:\*\*)?\s*—\s*([^\n]+)/g;
-  const activityRegex = /(?:^|\n)\s*-?\s*\(([^)]+)\)\s*([^—\n]+?)(?:\s*—\s*([^\n]+))?(?=\n|$)/g;
-
-  let match;
-  const matches = [];
-  while ((match = genealogyRegex.exec(text)) !== null) {
-    matches.push({ index: match.index, name: match[1].trim(), summary: match[2].trim() });
-  }
-
-  // 각 계보의 활동 추출
-  for (let i = 0; i < matches.length; i++) {
-    const start = matches[i].index;
-    const end = (i + 1 < matches.length) ? matches[i + 1].index : text.length;
-    const section = text.slice(start, end);
-
-    const activities = [];
-    activityRegex.lastIndex = 0;
-    let actMatch;
-    while ((actMatch = activityRegex.exec(section)) !== null) {
-      const source = actMatch[1].trim();  // 예: "2학년 동아리활동"
-      const title = actMatch[2].trim();
-      const detail = (actMatch[3] || "").trim();
-
-      // 학년 추출
-      const yearMatch = source.match(/(\d)학년/);
-      const year = yearMatch ? parseInt(yearMatch[1]) : null;
-
-      // 영역 추출
-      const area = source.replace(/\d학년\s*/, "").trim();
-
-      activities.push({ year, area, title, detail, source });
-    }
-
-    genealogies.push({
-      name: matches[i].name,
-      summary: matches[i].summary,
-      activities
-    });
-  }
-
-  return genealogies;
-}
-
-// 과목 결과 텍스트에서 탐구 주제 추출
-function parseTopicsFromSubject(subjectText, subjectName) {
-  if (!subjectText) return [];
-
-  const topics = [];
-
-  // 탐구 주제 ① / ② 찾기 (한 패턴씩)
-  const topicRegex = /\*\*\[탐구 주제 ([①②])([^\]]*)\]\*\*[\s\S]*?\*\*주제명\*\*:\s*([^\n]+)/g;
-
-  let match;
-  while ((match = topicRegex.exec(subjectText)) !== null) {
-    const indexChar = match[1];
-    const index = indexChar === "①" ? 1 : 2;
-    const tag = (match[2] || "").trim();  // 예: "— 진로 연계"
-    const title = match[3].trim();
-
-    topics.push({
-      subject: subjectName,
-      index,
-      tag,
-      title
-    });
-  }
-
-  return topics;
-}
-
-// 사후 매핑: 총론 심화 계보 × 과목 탐구 주제
-async function mapTopicsToGenealogies(overview, subjectResults) {
-  // 1. 총론에서 심화 계보 추출
-  const genealogies = parseGenealogiesFromOverview(overview);
-  if (genealogies.length === 0) {
-    console.warn("계보 추출 실패");
-    return { genealogies: [], mappings: [] };
-  }
-
-  // 2. 각 과목 결과에서 탐구 주제 추출
-  const topics = [];
-  for (const [subject, result] of Object.entries(subjectResults)) {
-    const subjectTopics = parseTopicsFromSubject(result, subject);
-    topics.push(...subjectTopics);
-  }
-  if (topics.length === 0) {
-    console.warn("탐구 주제 추출 실패");
-    return { genealogies, mappings: [] };
-  }
-
-  // 3. AI 호출로 매핑 (Haiku 사용 - 빠르고 저렴)
-  const genealogyText = genealogies
-    .map((g, i) => `${i + 1}. ${g.name} — ${g.summary || ""}\n   주요 활동: ${g.activities.map(a => a.title).join(", ")}`)
-    .join("\n\n");
-
-  const topicsText = topics
-    .map(t => `[${t.subject}] 탐구 주제 ${t.index}: ${t.title}`)
-    .join("\n");
-
-  try {
-    const result = await callClaude(
-      SYSTEM_GENEALOGY_MAPPING,
-      `[심화 계보 목록]\n${genealogyText}\n\n[탐구 주제 목록]\n${topicsText}`,
-      4096,
-      MODEL_FAST  // Haiku 사용
-    );
-
-    const parsed = JSON.parse(stripJsonFence(result));
-    return {
-      genealogies,
-      mappings: parsed.mappings || []
-    };
-  } catch (e) {
-    console.error("계보 매핑 실패:", e);
-    return { genealogies, mappings: [] };
-  }
-}
-
-
-// ============================================================
 // 메인 컴포넌트
 // ============================================================
 export default function SebakDesigner() {
@@ -2271,10 +2070,6 @@ export default function SebakDesigner() {
   const [activeSection, setActiveSection] = useState("profile");
   const [regeneratingSubject, setRegeneratingSubject] = useState(null);
 
-  // 📊 계보 시각화
-  const [genealogyData, setGenealogyData] = useState(null);
-  const [genealogyLoading, setGenealogyLoading] = useState(false);
-  const [fillingGenealogy, setFillingGenealogy] = useState(null);  // 채우는 중인 계보명
   
   // ====== v52: 탐구 난이도 state ======
   const [schoolGoal, setSchoolGoal] = useState("안정");      // 도전 / 안정 / 적정
@@ -3456,19 +3251,6 @@ const fileInputRef = useRef(null);
 
       setGenerationLog(l => [...l, `✓ [${elapsed()}] 모든 교과 완료`]);
 
-      // 📊 모든 과목 완료 후 계보 매핑 자동 실행 (subjectMap = 최신 로컬 결과)
-      try {
-        setGenealogyLoading(true);
-        setGenerationLog(l => [...l, `  → 계보 매핑 분석 중...`]);
-        const data = await mapTopicsToGenealogies(overview, subjectMap);
-        setGenealogyData(data);
-        setGenerationLog(l => [...l, `  ✓ 계보 매핑 완료 (${data.mappings.length}개 주제 매핑)`]);
-      } catch (e) {
-        console.error("계보 매핑 실패:", e);
-        setGenerationLog(l => [...l, `  ⚠ 계보 매핑 건너뜀 (시각화 불가)`]);
-      } finally {
-        setGenealogyLoading(false);
-      }
     } catch (e) {
       console.error("Generation error:", e);
       setGenerationError(`오류: ${e.message}\n\n${e.stack || ""}`);
@@ -3518,118 +3300,10 @@ const fileInputRef = useRef(null);
       const updatedMap = { ...subjectResults, [subject]: result };
       setSubjectResults(updatedMap);
 
-      // 📊 이미 계보 매핑이 있으면 재생성 결과로 매트릭스도 갱신
-      if (genealogyData) {
-        try {
-          const data = await mapTopicsToGenealogies(overview, updatedMap);
-          setGenealogyData(data);
-        } catch (e) {
-          console.error("재생성 후 계보 재매핑 실패:", e);
-        }
-      }
     } catch (e) {
       alert(`재생성 실패: ${e.message}`);
     } finally {
       setRegeneratingSubject(null);
-    }
-  }
-
-  // 📊 빈 계보 채우기: AI가 과목 자동 선택 → 기존 주제 1개 유지 + 1개를 목표 계보로 교체 → 재매핑
-  async function fillGenealogy(g) {
-    if (!g || selectedSubjects.length === 0) return;
-    setFillingGenealogy(g.name);
-    try {
-      const genealogyDesc = `${g.name} — ${g.summary || ""}\n기존 활동: ${g.activities.map(a => `${a.source ? "(" + a.source + ") " : ""}${a.title}`).join("; ")}`;
-
-      // 1. AI가 채울 과목 자동 선택 (Haiku)
-      const subjectListText = selectedSubjects.map(s => {
-        const info = curriculumData && curriculumData[s];
-        return `- ${s}${info ? ` (${info.교과군 || ""}${info.과목분류 ? "/" + info.과목분류 : ""})` : ""}`;
-      }).join("\n");
-
-      let chosenSubject = null;
-      let pickReason = "";
-      try {
-        const pickRes = await callClaude(
-          SYSTEM_GENEALOGY_SUBJECT_PICK,
-          `[목표 계보]\n${genealogyDesc}\n\n[이번 학기 과목]\n${subjectListText}`,
-          512,
-          MODEL_FAST
-        );
-        const parsed = JSON.parse(stripJsonFence(pickRes));
-        chosenSubject = parsed.subject;
-        pickReason = parsed.reason || "";
-      } catch (e) {
-        console.error("과목 자동 선택 실패:", e);
-      }
-      // 보정: 목록에 정확히 없으면 느슨한 매칭, 그래도 없으면 첫 과목
-      if (!chosenSubject || !selectedSubjects.includes(chosenSubject)) {
-        chosenSubject =
-          selectedSubjects.find(s => chosenSubject && (s.includes(chosenSubject) || chosenSubject.includes(s))) ||
-          selectedSubjects[0];
-      }
-      if (!chosenSubject) { alert("채울 과목을 찾지 못했습니다."); return; }
-
-      // 2. 유지할 주제 결정: 다른(목표 아닌·비독립) 계보에 매핑된 주제를 살리고 나머지를 교체
-      const subjectMaps = (genealogyData?.mappings || []).filter(m => m.subject === chosenSubject);
-      const anchored = subjectMaps.find(m => m.genealogy !== "독립" && m.genealogy !== g.name);
-      const keepIndex = anchored ? anchored.topicIndex : 1;
-      const replaceIndex = keepIndex === 1 ? 2 : 1;
-      const keepChar = keepIndex === 1 ? "①" : "②";
-      const replaceChar = replaceIndex === 1 ? "①" : "②";
-
-      setGenerationLog(l => [...l, `  📊 "${g.name}" 채우기 → 과목: ${chosenSubject}${pickReason ? ` (${pickReason})` : ""} / 유지 ${keepChar}, 교체 ${replaceChar}`]);
-
-      // 3. 컨텍스트 구성 (regenerateSubject와 동일 골격)
-      const displayMajor = studentInfo.목표학과 === "기타 (직접 입력)"
-        ? studentInfo.목표학과_커스텀
-        : studentInfo.목표학과.replace("__custom__", "");
-      const studentInfoText = `
-학생 이름: ${studentInfo.이름 || "(미입력)"}
-목표 학과: ${displayMajor}
-현재 학년: ${studentInfo.학년}
-이번 학기 이수 과목: ${selectedSubjects.join(", ")}
-`.trim();
-      const majorKey = studentInfo.목표학과;
-      const { info: resolvedMajorInfo } = resolveMajorInfo(majorKey, customMajorDB, majorInfoCache);
-      const majorInfo = resolvedMajorInfo || MAJOR_DB["기타 (직접 입력)"];
-      const majorContext = majorInfo.research_areas.length > 0
-        ? `\n[목표 학과 정보 — 검수된 데이터, 환각 금지]\n` +
-          `학과 키워드: ${majorInfo.keywords.join(", ")}\n` +
-          `핵심 연구 영역: ${majorInfo.research_areas.join("; ")}\n` +
-          `추천 탐구 방향: ${majorInfo.추천_탐구방향.join("; ")}\n` +
-          (majorInfo.주의사항 ? `⚠️ 학종 컨설턴트 주의사항: ${majorInfo.주의사항}\n` : "")
-        : "";
-      const facultyMappingSection = formatFacultyMappingAsInput(displayMajor);
-      const parsedText = parsedData ? JSON.stringify(parsedData, null, 2) : pdfText;
-      const isFreshman = studentInfo.학년 && studentInfo.학년.startsWith("1학년");
-      const identitySection = identityStatement.trim()
-        ? `\n[진로 정체성]\n"${identityStatement.trim()}"\n\n⚠️ 이 정체성은 학생이 인터뷰에서 도출한 진로 정체성입니다. 시스템 프롬프트의 [진로 정체성 활용 원칙]에 따라 처리하세요.\n`
-        : "";
-      const levelInfo = DIFFICULTY_LEVELS[finalLevel] || DIFFICULTY_LEVELS[2];
-      const difficultySection = `\n[최종 탐구 Level: ${finalLevel}]\n- 이름: ${levelInfo.name}\n- 가이드: ${levelInfo.description}\n- 학생부 평균 Level: ${baseLevel}\n- 진정성 경고: ${authenticityWarning ? "true (결과물 끝에 경고 표시)" : "false"}\n`;
-
-      const existing = subjectResults[chosenSubject] || "";
-      const fillInstruction = `\n[우선 발전 계보 — 빈 계보 채우기]\n계보명: ${g.name}\n흐름 요약: ${g.summary || ""}\n기존 활동: ${g.activities.map(a => a.title).join("; ")}\n\n⚠️ 이번 재작성 규칙 (반드시 준수):\n- 탐구 주제 ${keepChar}: 아래 [기존 결과]의 탐구 주제 ${keepChar}를 거의 그대로 유지하세요(주제명·핵심 내용 보존, 형식만 정리). 성격(진로/학업) 헤더도 기존과 동일하게.\n- 탐구 주제 ${replaceChar}: 위 [우선 발전 계보]를 자연스럽게 이어가는 새 탐구 주제로 교체하세요. 계보의 발전 방향을 한 단계 심화하되, 이 과목의 성취기준·성격 매트릭스 규칙은 그대로 따릅니다.\n- 출력 형식(설계 방향 + 탐구 주제 ①② 구조)은 기존과 완전히 동일하게 유지.\n\n[기존 결과]\n${existing}\n`;
-
-      const result = await callClaude(
-        (isFreshman ? SYSTEM_SUBJECT_FRESHMAN : SYSTEM_SUBJECT),
-        `${studentInfoText}${majorContext}${facultyMappingSection}${identitySection}${difficultySection}\n[총론]\n${overview}\n\n[학생부]\n${parsedText}\n\n[작성 대상 과목]\n${chosenSubject}${fillInstruction}`,
-        4500
-      );
-
-      const updatedMap = { ...subjectResults, [chosenSubject]: result };
-      setSubjectResults(updatedMap);
-
-      // 4. 재매핑으로 매트릭스 갱신
-      const data = await mapTopicsToGenealogies(overview, updatedMap);
-      setGenealogyData(data);
-      setGenerationLog(l => [...l, `  ✓ "${g.name}" 채우기 완료 (${chosenSubject} 재작성)`]);
-    } catch (e) {
-      console.error("계보 채우기 실패:", e);
-      alert(`계보 채우기 실패: ${e.message}`);
-    } finally {
-      setFillingGenealogy(null);
     }
   }
 
@@ -4715,34 +4389,6 @@ ${selectedSubjects.map(s => subjectResults[s] || "").join("\n\n---\n\n")}
                 >
                   2. 설계 방향 총론
                 </div>
-                {(genealogyData || genealogyLoading) && (
-                  <div
-                    onClick={() => genealogyData && setActiveSection("genealogy")}
-                    style={{
-                      padding: "8px 10px",
-                      fontSize: "13px",
-                      cursor: genealogyData ? "pointer" : "default",
-                      fontWeight: activeSection === "genealogy" ? 600 : 400,
-                      color: genealogyData ? "#1a1a1a" : "#aaa",
-                      background: activeSection === "genealogy" ? "#fafaf7" : "transparent",
-                      borderLeft: activeSection === "genealogy" ? "2px solid #1a1a1a" : "2px solid transparent",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px"
-                    }}
-                  >
-                    📊 계보 시각화
-                    {genealogyLoading && (
-                      <span style={{
-                        width: "10px", height: "10px",
-                        border: "1.5px solid #ccc", borderTopColor: "transparent",
-                        borderRadius: "50%",
-                        animation: "spin 0.8s linear infinite",
-                        display: "inline-block"
-                      }} />
-                    )}
-                  </div>
-                )}
                 <div style={{ fontSize: "11px", color: "#aaa", marginTop: "12px", marginBottom: "6px", paddingLeft: "10px" }}>
                   교과별 컨셉
                 </div>
@@ -4835,16 +4481,7 @@ ${selectedSubjects.map(s => subjectResults[s] || "").join("\n\n---\n\n")}
                 {activeSection === "design" && (
                   <MarkdownRenderer content={designContent} />
                 )}
-                {activeSection === "genealogy" && (
-                  <GenealogyMatrix
-                    genealogyData={genealogyData}
-                    currentSemester={studentInfo.학년}
-                    loading={genealogyLoading}
-                    onFillGenealogy={fillGenealogy}
-                    fillingGenealogy={fillingGenealogy}
-                  />
-                )}
-                {activeSection !== "profile" && activeSection !== "design" && activeSection !== "genealogy" && !subjectResults[activeSection] && generatingPhase === "subjects" && (
+                {activeSection !== "profile" && activeSection !== "design" && !subjectResults[activeSection] && generatingPhase === "subjects" && (
                   <div style={{ padding: "32px", textAlign: "center", color: "#666" }}>
                     <div style={{ display: "inline-flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
                       <span style={{
@@ -5824,265 +5461,6 @@ function MajorInfoPanel({
       )}
 
           </div>
-  );
-}
-
-// ============================================================
-// 📊 계보 시각화 매트릭스 컴포넌트
-// ============================================================
-function GenealogyMatrix({ genealogyData, currentSemester, loading, onFillGenealogy, fillingGenealogy }) {
-  if (loading) {
-    return (
-      <div style={{ padding: "40px", textAlign: "center", color: "#888" }}>
-        <span style={{
-          display: "inline-block", width: "20px", height: "20px",
-          border: "2px solid #ccc", borderTopColor: "#1a1a1a",
-          borderRadius: "50%", animation: "spin 0.8s linear infinite",
-          marginRight: "10px", verticalAlign: "middle"
-        }} />
-        계보 매핑 분석 중...
-      </div>
-    );
-  }
-
-  if (!genealogyData || !genealogyData.genealogies || genealogyData.genealogies.length === 0) {
-    return (
-      <div style={{ padding: "20px", color: "#888", fontSize: "13px" }}>
-        계보 시각화를 위한 데이터가 부족합니다. 총론에 심화 계보가 추출되어 있어야 합니다.
-      </div>
-    );
-  }
-
-  const { genealogies, mappings } = genealogyData;
-
-  // 학년 열 결정
-  const allYears = new Set();
-  genealogies.forEach(g => {
-    g.activities.forEach(a => {
-      if (a.year) allYears.add(a.year);
-    });
-  });
-  const years = Array.from(allYears).sort();
-
-  // 매핑을 계보별로 그룹화
-  const mappingsByGenealogy = {};
-  mappings.forEach(m => {
-    if (!mappingsByGenealogy[m.genealogy]) {
-      mappingsByGenealogy[m.genealogy] = [];
-    }
-    mappingsByGenealogy[m.genealogy].push(m);
-  });
-
-  // 독립 활동 따로
-  const independentTopics = mappingsByGenealogy["독립"] || [];
-
-  return (
-    <div style={{ padding: "20px 0" }}>
-      <div style={{ marginBottom: "20px" }}>
-        <h2 style={{ fontSize: "20px", fontWeight: 600, marginBottom: "8px" }}>📊 탐구 계보 시각화</h2>
-        <p style={{ fontSize: "13px", color: "#666", lineHeight: 1.6 }}>
-          학생부에서 추출한 심화 계보(행)와 학년별 활동(열)을 한눈에 보여줍니다.
-          이번 학기 추천 탐구 주제가 어느 계보를 발전시키는지 표시됩니다.
-        </p>
-      </div>
-
-      <div style={{ overflowX: "auto" }}>
-        <table style={{
-          width: "100%",
-          borderCollapse: "collapse",
-          fontSize: "13px"
-        }}>
-          <thead>
-            <tr style={{ background: "#fafaf7", borderBottom: "2px solid #1a1a1a" }}>
-              <th style={{
-                padding: "12px",
-                textAlign: "left",
-                fontWeight: 600,
-                minWidth: "160px",
-                borderRight: "1px solid #e8e8e8"
-              }}>
-                계보
-              </th>
-              {years.map(y => (
-                <th key={y} style={{
-                  padding: "12px",
-                  textAlign: "left",
-                  fontWeight: 600,
-                  minWidth: "180px",
-                  borderRight: "1px solid #e8e8e8"
-                }}>
-                  {y}학년
-                </th>
-              ))}
-              <th style={{
-                padding: "12px",
-                textAlign: "left",
-                fontWeight: 600,
-                minWidth: "200px",
-                background: "#fff3e0"
-              }}>
-                ⭐ {currentSemester || "이번 학기"} 추천
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {genealogies.map((g, idx) => {
-              const genealogyMappings = mappingsByGenealogy[g.name] || [];
-              return (
-                <tr key={idx} style={{ borderBottom: "1px solid #e8e8e8" }}>
-                  {/* 계보명 */}
-                  <td style={{
-                    padding: "12px",
-                    verticalAlign: "top",
-                    background: "#fafaf7",
-                    borderRight: "1px solid #e8e8e8"
-                  }}>
-                    <div style={{ fontWeight: 600, marginBottom: "4px" }}>{g.name}</div>
-                    {g.summary && (
-                      <div style={{ fontSize: "11px", color: "#888", lineHeight: 1.5 }}>
-                        {g.summary}
-                      </div>
-                    )}
-                  </td>
-
-                  {/* 학년별 활동 */}
-                  {years.map(y => {
-                    const activities = g.activities.filter(a => a.year === y);
-                    return (
-                      <td key={y} style={{
-                        padding: "12px",
-                        verticalAlign: "top",
-                        borderRight: "1px solid #e8e8e8"
-                      }}>
-                        {activities.length === 0 ? (
-                          <div style={{ color: "#ccc", fontSize: "11px" }}>—</div>
-                        ) : (
-                          activities.map((a, i) => (
-                            <div key={i} style={{
-                              marginBottom: i < activities.length - 1 ? "10px" : 0,
-                              padding: "6px 8px",
-                              background: "#f8f8f5",
-                              borderRadius: "4px",
-                              borderLeft: "3px solid #999"
-                            }}>
-                              <div style={{ fontSize: "10px", color: "#888", marginBottom: "2px" }}>
-                                {a.area}
-                              </div>
-                              <div style={{ fontSize: "12px", color: "#1a1a1a", lineHeight: 1.4 }}>
-                                {a.title}
-                              </div>
-                            </div>
-                          ))
-                        )}
-                      </td>
-                    );
-                  })}
-
-                  {/* 이번 학기 추천 */}
-                  <td style={{
-                    padding: "12px",
-                    verticalAlign: "top",
-                    background: "#fffbf0"
-                  }}>
-                    {genealogyMappings.length === 0 ? (
-                      onFillGenealogy ? (
-                        <button
-                          onClick={() => onFillGenealogy(g)}
-                          disabled={!!fillingGenealogy}
-                          style={{
-                            padding: "6px 10px",
-                            fontSize: "11px",
-                            fontWeight: 600,
-                            color: fillingGenealogy ? "#aaa" : "#a60",
-                            background: "white",
-                            border: "1px dashed #fb0",
-                            borderRadius: "4px",
-                            cursor: fillingGenealogy ? "default" : "pointer",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "5px"
-                          }}
-                        >
-                          {fillingGenealogy === g.name ? (
-                            <>
-                              <span style={{
-                                width: "9px", height: "9px",
-                                border: "1.5px solid #ddd", borderTopColor: "#a60",
-                                borderRadius: "50%",
-                                animation: "spin 0.8s linear infinite",
-                                display: "inline-block"
-                              }} />
-                              채우는 중...
-                            </>
-                          ) : "➕ AI로 채우기"}
-                        </button>
-                      ) : (
-                        <div style={{ color: "#ccc", fontSize: "11px" }}>—</div>
-                      )
-                    ) : (
-                      genealogyMappings.map((m, i) => (
-                        <div key={i} style={{
-                          marginBottom: i < genealogyMappings.length - 1 ? "10px" : 0,
-                          padding: "6px 8px",
-                          background: "white",
-                          borderRadius: "4px",
-                          borderLeft: "3px solid #fb0"
-                        }}>
-                          <div style={{ fontSize: "10px", color: "#a60", fontWeight: 600, marginBottom: "2px" }}>
-                            ⭐ {m.subject}
-                          </div>
-                          <div style={{ fontSize: "12px", color: "#1a1a1a", lineHeight: 1.4 }}>
-                            {m.topicTitle}
-                          </div>
-                          {m.reason && (
-                            <div style={{ fontSize: "10px", color: "#888", marginTop: "4px", fontStyle: "italic" }}>
-                              {m.reason}
-                            </div>
-                          )}
-                        </div>
-                      ))
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      {/* 독립 활동 (계보에 매핑 안 된 추천) */}
-      {independentTopics.length > 0 && (
-        <div style={{ marginTop: "24px", padding: "16px", background: "#fafaf7", borderRadius: "8px" }}>
-          <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "8px", color: "#666" }}>
-            🔹 독립 탐구 주제 (기존 계보와 별개로 추천된 새 방향)
-          </div>
-          {independentTopics.map((m, i) => (
-            <div key={i} style={{
-              marginBottom: i < independentTopics.length - 1 ? "8px" : 0,
-              padding: "8px 12px",
-              background: "white",
-              borderRadius: "4px",
-              fontSize: "12px"
-            }}>
-              <span style={{ fontWeight: 600, color: "#666" }}>[{m.subject}]</span>{" "}
-              {m.topicTitle}
-              {m.reason && (
-                <span style={{ color: "#888", marginLeft: "8px", fontStyle: "italic" }}>
-                  — {m.reason}
-                </span>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* 매핑 통계 */}
-      <div style={{ marginTop: "16px", fontSize: "11px", color: "#888", textAlign: "right" }}>
-        총 {mappings.length}개 탐구 주제 중{" "}
-        {mappings.filter(m => m.genealogy !== "독립").length}개 매핑,{" "}
-        {independentTopics.length}개 독립
-      </div>
-    </div>
   );
 }
 
